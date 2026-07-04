@@ -19,6 +19,8 @@ import "./styles.css";
 
 const DEFAULT_API_BASE = import.meta.env.PROD ? "/api" : "http://localhost:8000/api";
 const apiBase = import.meta.env.VITE_API_BASE || DEFAULT_API_BASE;
+const isStaticMode = import.meta.env.PROD && !import.meta.env.VITE_API_BASE;
+const staticDataUrl = `${import.meta.env.BASE_URL}data/dashboard.json`;
 
 const tabs = [
   { id: "dashboard", label: "今日看板", icon: LayoutDashboard },
@@ -65,11 +67,14 @@ function App() {
   const [selected, setSelected] = useState(demoEvents[0]);
   const [themes, setThemes] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
-  const [status, setStatus] = useState("等待连接后端");
+  const [status, setStatus] = useState(isStaticMode ? "GitHub Pages 静态看板" : "等待连接后端");
   const [query, setQuery] = useState("");
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem("adminToken") || "");
 
   async function api(path, options) {
+    if (isStaticMode) {
+      throw new Error("static mode does not support API writes");
+    }
     const method = options?.method || "GET";
     const headers = { "Content-Type": "application/json", ...(options?.headers || {}) };
     if (method !== "GET" && adminToken) {
@@ -90,6 +95,20 @@ function App() {
 
   async function loadAll() {
     try {
+      if (isStaticMode) {
+        const response = await fetch(staticDataUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error("static data not found");
+        const dashboard = await response.json();
+        setEvents(dashboard.events?.length ? dashboard.events : demoEvents);
+        setSources(dashboard.sources || []);
+        setStats(dashboard.stats || {});
+        setThemes(dashboard.themes || []);
+        setWatchlist(dashboard.watchlist || []);
+        setSelected(dashboard.events?.[0] || demoEvents[0]);
+        const generated = dashboard.generated_at ? new Date(dashboard.generated_at).toLocaleString("zh-CN") : "尚未生成";
+        setStatus(`静态数据已加载，生成时间：${generated}`);
+        return;
+      }
       const [dashboard, themeData, watchData] = await Promise.all([
         api("/dashboard"),
         api("/themes"),
@@ -108,6 +127,10 @@ function App() {
   }
 
   async function refreshSources() {
+    if (isStaticMode) {
+      setStatus("GitHub Pages 版本由 GitHub Actions 定时刷新；也可以在仓库 Actions 页面手动运行。");
+      return;
+    }
     setStatus("正在刷新公开来源");
     try {
       const result = await api("/refresh", { method: "POST" });
@@ -171,7 +194,7 @@ function App() {
             </label>
             <button className="primary" onClick={refreshSources}>
               <RefreshCw size={17} />
-              刷新
+              {isStaticMode ? "更新说明" : "刷新"}
             </button>
           </div>
         </header>
@@ -180,7 +203,7 @@ function App() {
           <Dashboard events={filteredEvents} sources={sources} stats={stats} selected={selected} onSelect={setSelected} />
         )}
         {active === "themes" && <Themes events={filteredEvents} themes={themes} />}
-        {active === "watchlist" && <Watchlist watchlist={watchlist} reload={loadAll} api={api} events={filteredEvents} hasAdminToken={Boolean(adminToken)} />}
+        {active === "watchlist" && <Watchlist watchlist={watchlist} reload={loadAll} api={api} events={filteredEvents} hasAdminToken={Boolean(adminToken)} isStaticMode={isStaticMode} />}
         {active === "settings" && (
           <SettingsPanel
             sources={sources}
@@ -189,6 +212,7 @@ function App() {
             reload={loadAll}
             adminToken={adminToken}
             setAdminToken={saveAdminToken}
+            isStaticMode={isStaticMode}
           />
         )}
       </main>
@@ -296,7 +320,7 @@ function Themes({ events, themes }) {
   );
 }
 
-function Watchlist({ watchlist, reload, api, events, hasAdminToken }) {
+function Watchlist({ watchlist, reload, api, events, hasAdminToken, isStaticMode }) {
   const [form, setForm] = useState({ ticker: "", name: "", market: "CN", notes: "" });
   async function save(event) {
     event.preventDefault();
@@ -312,16 +336,17 @@ function Watchlist({ watchlist, reload, api, events, hasAdminToken }) {
     <section className="two-column">
       <form className="panel" onSubmit={save}>
         <h2>添加关注</h2>
-        {!hasAdminToken && <p className="hint">公开部署后需要先在设置页填写管理员令牌，才能修改关注列表。</p>}
-        <input value={form.ticker} onChange={(e) => setForm({ ...form, ticker: e.target.value })} placeholder="股票代码，如 600519" required />
-        <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="公司名称" required />
-        <select value={form.market} onChange={(e) => setForm({ ...form, market: e.target.value })}>
+        {isStaticMode && <p className="hint">GitHub Pages 版本是只读看板；关注列表需要以后通过仓库配置或本地后端维护。</p>}
+        {!isStaticMode && !hasAdminToken && <p className="hint">公开部署后需要先在设置页填写管理员令牌，才能修改关注列表。</p>}
+        <input disabled={isStaticMode} value={form.ticker} onChange={(e) => setForm({ ...form, ticker: e.target.value })} placeholder="股票代码，如 600519" required />
+        <input disabled={isStaticMode} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="公司名称" required />
+        <select disabled={isStaticMode} value={form.market} onChange={(e) => setForm({ ...form, market: e.target.value })}>
           <option value="CN">A股</option>
           <option value="HK">港股</option>
           <option value="US">美股</option>
         </select>
-        <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="关注理由" />
-        <button className="primary">保存</button>
+        <textarea disabled={isStaticMode} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="关注理由" />
+        <button disabled={isStaticMode} className="primary">保存</button>
       </form>
       <div className="panel">
         <h2>当前关注</h2>
@@ -338,7 +363,7 @@ function Watchlist({ watchlist, reload, api, events, hasAdminToken }) {
   );
 }
 
-function SettingsPanel({ sources, themes, api, reload, adminToken, setAdminToken }) {
+function SettingsPanel({ sources, themes, api, reload, adminToken, setAdminToken, isStaticMode }) {
   const [settings, setSettings] = useState({ collect_interval_minutes: 180, openai_api_key: "" });
   async function saveSettings(event) {
     event.preventDefault();
@@ -348,15 +373,24 @@ function SettingsPanel({ sources, themes, api, reload, adminToken, setAdminToken
   return (
     <section className="two-column">
       <form className="panel" onSubmit={saveSettings}>
-        <h2>部署设置</h2>
-        <label>管理员令牌</label>
-        <input type="password" value={adminToken} onChange={(e) => setAdminToken(e.target.value)} placeholder="部署环境里的 ADMIN_TOKEN" />
-        <p className="hint">公开网站只读内容对外开放；刷新、设置和关注列表修改会携带这个令牌。</p>
+        <h2>{isStaticMode ? "GitHub Pages 设置" : "部署设置"}</h2>
+        {isStaticMode && (
+          <p className="hint">
+            当前是不绑卡的静态版本。数据由 GitHub Actions 定时生成，不能在网页里直接保存设置或刷新后端。
+          </p>
+        )}
+        {!isStaticMode && (
+          <>
+            <label>管理员令牌</label>
+            <input type="password" value={adminToken} onChange={(e) => setAdminToken(e.target.value)} placeholder="部署环境里的 ADMIN_TOKEN" />
+            <p className="hint">公开网站只读内容对外开放；刷新、设置和关注列表修改会携带这个令牌。</p>
+          </>
+        )}
         <label>采集间隔（分钟）</label>
-        <input type="number" min="15" max="1440" value={settings.collect_interval_minutes} onChange={(e) => setSettings({ ...settings, collect_interval_minutes: Number(e.target.value) })} />
+        <input disabled={isStaticMode} type="number" min="15" max="1440" value={settings.collect_interval_minutes} onChange={(e) => setSettings({ ...settings, collect_interval_minutes: Number(e.target.value) })} />
         <label>OpenAI API Key</label>
-        <input type="password" value={settings.openai_api_key} onChange={(e) => setSettings({ ...settings, openai_api_key: e.target.value })} placeholder="sk-..." />
-        <button className="primary">保存设置</button>
+        <input disabled={isStaticMode} type="password" value={settings.openai_api_key} onChange={(e) => setSettings({ ...settings, openai_api_key: e.target.value })} placeholder="sk-..." />
+        <button disabled={isStaticMode} className="primary">保存设置</button>
       </form>
       <div className="panel source-panel">
         <h2>可信来源状态</h2>

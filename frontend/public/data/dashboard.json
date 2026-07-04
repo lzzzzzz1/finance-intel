@@ -1,0 +1,240 @@
+{
+  "events": [],
+  "sources": [
+    {
+      "id": "sse",
+      "name": "上交所上市公司公告",
+      "category": "announcement",
+      "region": "CN",
+      "url": "https://www.sse.com.cn/disclosure/listedinfo/announcement/",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "bse",
+      "name": "北交所公告",
+      "category": "announcement",
+      "region": "CN",
+      "url": "https://www.bse.cn/disclosure/announcement.html",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "cninfo",
+      "name": "巨潮资讯",
+      "category": "announcement",
+      "region": "CN",
+      "url": "https://www.cninfo.com.cn/new/index",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "szse",
+      "name": "深交所上市公司公告",
+      "category": "announcement",
+      "region": "CN",
+      "url": "https://www.szse.cn/disclosure/listed/notice/index.html",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "pbc",
+      "name": "中国人民银行",
+      "category": "policy",
+      "region": "CN",
+      "url": "https://www.pbc.gov.cn/goutongjiaoliu/113456/113469/index.html",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "state_council",
+      "name": "中国政府网政策",
+      "category": "policy",
+      "region": "CN",
+      "url": "https://www.gov.cn/zhengce/index.htm",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "csrc",
+      "name": "中国证监会",
+      "category": "policy",
+      "region": "CN",
+      "url": "http://www.csrc.gov.cn/csrc/c100028/common_list.shtml",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "ecb",
+      "name": "European Central Bank",
+      "category": "policy",
+      "region": "EU",
+      "url": "https://www.ecb.europa.eu/rss/press.html",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "imf",
+      "name": "IMF News",
+      "category": "macro",
+      "region": "GLOBAL",
+      "url": "https://www.imf.org/en/News",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "hkexnews",
+      "name": "HKEXnews",
+      "category": "announcement",
+      "region": "HK",
+      "url": "https://www.hkexnews.hk/index.htm",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "sec_edgar",
+      "name": "SEC EDGAR",
+      "category": "filing",
+      "region": "US",
+      "url": "https://data.sec.gov/submissions/CIK0000320193.json",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    },
+    {
+      "id": "fed",
+      "name": "Federal Reserve",
+      "category": "policy",
+      "region": "US",
+      "url": "https://www.federalreserve.gov/feeds/press_all.xml",
+      "trust_level": "official",
+      "enabled": 1,
+      "last_status": null,
+      "last_error": null,
+      "last_checked_at": null
+    }
+  ],
+  "themes": [
+    {
+      "id": 1,
+      "name": "AI",
+      "keywords": [
+        "人工智能",
+        "AI",
+        "算力",
+        "大模型",
+        "芯片",
+        "数据中心"
+      ],
+      "enabled": 1
+    },
+    {
+      "id": 5,
+      "name": "军工",
+      "keywords": [
+        "军工",
+        "航空",
+        "航天",
+        "国防",
+        "无人机",
+        "船舶"
+      ],
+      "enabled": 1
+    },
+    {
+      "id": 4,
+      "name": "医药",
+      "keywords": [
+        "医药",
+        "创新药",
+        "医疗器械",
+        "集采",
+        "临床",
+        "疫苗"
+      ],
+      "enabled": 1
+    },
+    {
+      "id": 3,
+      "name": "半导体",
+      "keywords": [
+        "半导体",
+        "芯片",
+        "晶圆",
+        "封测",
+        "光刻",
+        "存储"
+      ],
+      "enabled": 1
+    },
+    {
+      "id": 2,
+      "name": "新能源",
+      "keywords": [
+        "新能源",
+        "光伏",
+        "风电",
+        "储能",
+        "锂电",
+        "电动车"
+      ],
+      "enabled": 1
+    },
+    {
+      "id": 6,
+      "name": "消费",
+      "keywords": [
+        "消费",
+        "零售",
+        "白酒",
+        "食品饮料",
+        "旅游",
+        "家电"
+      ],
+      "enabled": 1
+    }
+  ],
+  "watchlist": [],
+  "stats": {
+    "event_count": 0,
+    "watch_count": 0,
+    "theme_count": 6
+  },
+  "generated_at": "2026-07-04T10:02:28+00:00",
+  "collect_result": {
+    "inserted": 0,
+    "failed": 0
+  }
+}

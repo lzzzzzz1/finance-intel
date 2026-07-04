@@ -46,11 +46,34 @@ pnpm dev
 
 ## 公开部署（个人使用）
 
-推荐最小公开版：一个 Docker Web 服务同时托管前端和后端，网站公开只读，刷新、设置和关注列表修改用 `ADMIN_TOKEN` 保护。
+推荐不绑卡方案：GitHub Pages 托管静态网页，GitHub Actions 每 6 小时采集一次公开来源并生成 `data/dashboard.json`。网站可以随时随地打开，但它是只读看板，不能在网页里直接保存设置或手动刷新后端。
+
+公开网址格式：
+
+```text
+https://lzzzzzz1.github.io/finance-intel/
+```
+
+### GitHub Pages 部署
+
+1. 打开 GitHub 仓库 `lzzzzzz1/finance-intel`。
+2. 进入 `Settings` -> `Pages`。
+3. `Source` 选择 `GitHub Actions`。
+4. 进入 `Settings` -> `Secrets and variables` -> `Actions`。
+5. 添加 secret：
+   - `OPENAI_API_KEY`：你的 OpenAI API Key。如果不添加，系统会使用规则分析。
+6. 进入 `Actions`，选择 `Deploy GitHub Pages`。
+7. 点击 `Run workflow` 手动跑一次。之后它会每 6 小时自动更新。
+
+部署成功后，GitHub 会在 Pages 设置页显示公开网址。
+
+### Render 部署（可选）
+
+Render 可以运行完整后端，但某些账号或地区可能要求添加银行卡。你不想绑卡时，优先使用上面的 GitHub Pages 方案。
 
 默认 `render.yaml` 使用 Render 免费 Web 服务，不配置持久磁盘。这样通常不需要先绑卡，但 SQLite 数据库保存在临时目录，服务重启或重新部署后历史数据可能丢失。先用它跑通最省心；如果以后想长期保存历史数据，再升级到付费磁盘或外部数据库。
 
-### Render 部署
+Render 步骤：
 
 1. 把仓库推到 GitHub。
 2. 在 Render 新建 Blueprint，选择这个仓库里的 `render.yaml`。
