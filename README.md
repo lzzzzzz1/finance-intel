@@ -48,6 +48,8 @@ pnpm dev
 
 推荐最小公开版：一个 Docker Web 服务同时托管前端和后端，网站公开只读，刷新、设置和关注列表修改用 `ADMIN_TOKEN` 保护。
 
+默认 `render.yaml` 使用 Render 免费 Web 服务，不配置持久磁盘。这样通常不需要先绑卡，但 SQLite 数据库保存在临时目录，服务重启或重新部署后历史数据可能丢失。先用它跑通最省心；如果以后想长期保存历史数据，再升级到付费磁盘或外部数据库。
+
 ### Render 部署
 
 1. 把仓库推到 GitHub。
@@ -61,7 +63,7 @@ pnpm dev
 
 ### 其他 Docker 平台
 
-支持任意能运行 Docker 的平台。需要持久化 `/data`，否则 SQLite 数据库会在重启后丢失。
+支持任意能运行 Docker 的平台。如果想长期保留 SQLite 数据，需要持久化 `/data`；如果只想免费试用，可以省略 volume，并把 `DATABASE_PATH` 设为 `/tmp/intel.db`。
 
 ```bash
 docker build -t finance-intel .

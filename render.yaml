@@ -2,14 +2,10 @@ services:
   - type: web
     name: finance-intel
     env: docker
-    plan: starter
-    disk:
-      name: finance-intel-data
-      mountPath: /data
-      sizeGB: 1
+    plan: free
     envVars:
       - key: DATABASE_PATH
-        value: /data/intel.db
+        value: /tmp/intel.db
       - key: COLLECT_INTERVAL_MINUTES
         value: "180"
       - key: USER_AGENT
