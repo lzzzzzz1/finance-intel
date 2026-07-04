@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: finance-intel
+    env: docker
+    plan: starter
+    disk:
+      name: finance-intel-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_PATH
+        value: /data/intel.db
+      - key: COLLECT_INTERVAL_MINUTES
+        value: "180"
+      - key: USER_AGENT
+        value: LocalFinanceIntel/0.1 contact=your-email@example.com
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
