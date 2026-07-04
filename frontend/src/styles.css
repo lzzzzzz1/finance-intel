@@ -283,6 +283,11 @@ h3 {
   background: #fee2e2;
 }
 
+.score.ai {
+  color: #1f2937;
+  background: #e0f2fe;
+}
+
 .detail {
   padding: 20px;
   max-height: calc(100vh - 186px);
@@ -298,6 +303,59 @@ h3 {
 .detail p,
 .detail li {
   line-height: 1.7;
+}
+
+.ai-read {
+  margin: 18px 0;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+}
+
+.ai-read-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f766e;
+}
+
+.ai-read-title h3 {
+  margin-bottom: 0;
+}
+
+.ai-summary {
+  margin: 12px 0;
+  color: #111827;
+  font-weight: 650;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ai-grid div {
+  min-height: 78px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.ai-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.ai-grid strong {
+  display: block;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .detail a,
@@ -412,6 +470,10 @@ h3 {
 
   .dashboard-grid,
   .two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-grid {
     grid-template-columns: 1fr;
   }
 

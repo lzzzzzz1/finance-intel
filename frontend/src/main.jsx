@@ -5,6 +5,7 @@ import {
   BarChart3,
   BookOpen,
   CheckCircle2,
+  FileText,
   ExternalLink,
   Globe2,
   LayoutDashboard,
@@ -57,6 +58,26 @@ function scoreClass(value, neutral = false) {
   if (value >= 75) return "score high";
   if (value >= 45) return "score mid";
   return "score low";
+}
+
+function sentimentLabel(score = 0) {
+  if (score >= 25) return "偏正面";
+  if (score <= -25) return "偏负面";
+  return "中性/待观察";
+}
+
+function riskLabel(score = 0) {
+  if (score >= 70) return "高风险";
+  if (score >= 40) return "中等风险";
+  return "低到中等风险";
+}
+
+function impactLabel(event) {
+  const themes = (event?.themes || []).slice(0, 2).join("、");
+  const tickers = (event?.tickers || []).slice(0, 2).join("、");
+  if (tickers) return `优先关注 ${tickers} 的后续公告和价格反应。`;
+  if (themes) return `可能影响 ${themes} 相关板块的短期预期。`;
+  return "主要用于判断宏观、政策或公司基本面的边际变化。";
 }
 
 function App() {
@@ -265,6 +286,7 @@ function EventCard({ event, active, onClick }) {
         <span>{event.category}</span>
       </div>
       <div className="score-row">
+        <span className="score ai">AI总结</span>
         <span className={scoreClass(event.importance_score)}>重要 {event.importance_score}</span>
         <span className={scoreClass(event.sentiment_score, true)}>情绪 {event.sentiment_score}</span>
         <span className={scoreClass(event.risk_score)}>风险 {event.risk_score}</span>
@@ -278,14 +300,37 @@ function EventDetail({ event }) {
   return (
     <article className="detail">
       <div className="detail-top">
-        <span className="trust"><CheckCircle2 size={16} />可信度 {event.confidence_score}</span>
+        <span className="trust"><CheckCircle2 size={16} />AI可信度 {event.confidence_score}</span>
         <a href={event.source_url} target="_blank" rel="noreferrer">
-          原文 <ExternalLink size={15} />
+          官网原文 <ExternalLink size={15} />
         </a>
       </div>
       <h2>{event.title}</h2>
       <p className="meta">{event.source_name} · {event.published_at || "未知时间"} · {event.category}</p>
-      <h3>新手解释</h3>
+
+      <section className="ai-read">
+        <div className="ai-read-title">
+          <FileText size={18} />
+          <h3>AI速读</h3>
+        </div>
+        <p className="ai-summary">{event.summary}</p>
+        <div className="ai-grid">
+          <div>
+            <span>可能影响</span>
+            <strong>{impactLabel(event)}</strong>
+          </div>
+          <div>
+            <span>情绪判断</span>
+            <strong>{sentimentLabel(event.sentiment_score)}</strong>
+          </div>
+          <div>
+            <span>风险提示</span>
+            <strong>{riskLabel(event.risk_score)}</strong>
+          </div>
+        </div>
+      </section>
+
+      <h3>一句话解释</h3>
       <p>{event.novice_explanation}</p>
       <h3>关键数字</h3>
       <div className="chips">
@@ -295,6 +340,7 @@ function EventDetail({ event }) {
       <ul>
         {(event.caveats || []).map((item) => <li key={item}>{item}</li>)}
       </ul>
+      <p className="hint">站内先看 AI 提炼；点击“官网原文”会在新标签页打开官方来源，用于核对原始公告或新闻。</p>
       <p className="disclaimer">{event.disclaimer}</p>
     </article>
   );
