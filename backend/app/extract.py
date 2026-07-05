@@ -92,6 +92,10 @@ def is_content_block(text: str) -> bool:
 
 
 def readable_html_text(raw: str) -> str:
+    extracted = trafilatura_text(raw)
+    if extracted:
+        return extracted
+
     parser = ReadableHTMLParser()
     try:
         parser.feed(raw or "")
@@ -112,6 +116,25 @@ def readable_html_text(raw: str) -> str:
     if len(text) < 120 and len(blocks) < 2:
         return clean_html(raw)
     return text
+
+
+def trafilatura_text(raw: str) -> str:
+    try:
+        import trafilatura
+    except ImportError:
+        return ""
+    try:
+        extracted = trafilatura.extract(
+            raw or "",
+            include_comments=False,
+            include_tables=False,
+            no_fallback=False,
+            output_format="txt",
+        )
+    except Exception:
+        return ""
+    text = normalize_space(extracted or "")
+    return text if len(text) >= 80 else ""
 
 
 def normalize_space(text: str) -> str:

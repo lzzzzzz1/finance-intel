@@ -16,7 +16,7 @@ from .storage import connect, init_db
 
 
 settings = get_settings()
-scheduler = BackgroundScheduler(timezone="UTC")
+scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
 
 
 def scheduled_collect() -> None:
@@ -39,8 +39,9 @@ async def lifespan(app: FastAPI):
     if not scheduler.running:
         scheduler.add_job(
             scheduled_collect,
-            "interval",
-            minutes=settings.collect_interval_minutes,
+            "cron",
+            hour=8,
+            minute=0,
             id="collect-trusted-sources",
             replace_existing=True,
         )

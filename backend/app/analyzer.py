@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-DISCLAIMER = "本工具仅用于信息整理与学习，不构成投资建议；请结合公告原文、风险承受能力和专业意见独立判断。"
+DISCLAIMER = "本工具仅基于原文做信息整理，不提供投资建议。"
 
 
 POSITIVE_TERMS = ["增长", "盈利", "中标", "回购", "增持", "突破", "批准", "上调", "beat", "growth", "profit"]
@@ -73,7 +73,7 @@ def split_sentences(text: str) -> list[str]:
 def build_reading_sections(text: str, max_sections: int = 5) -> list[dict[str, str]]:
     sentences = split_sentences(text)
     sections = []
-    labels = ["核心内容", "背景与口径", "关键变化", "风险线索", "后续观察"]
+    labels = ["核心内容", "背景与口径", "关键变化", "补充信息", "原文后续"]
     for index in range(0, min(len(sentences), max_sections * 3), 3):
         content = "".join(sentences[index:index + 3]).strip()
         if content:
@@ -129,12 +129,8 @@ def rule_based_analysis(event: dict[str, Any]) -> AnalysisResult:
     summary = "。".join(part.strip(" 。") for part in summary_parts if part).strip()
     if len(summary) > 360:
         summary = summary[:357] + "..."
-    explanation = (
-        f"发生了什么：{title or '官方来源发布了一条新的财经/政策信息'}。\n"
-        "为什么重要：它可能改变市场对相关公司、行业或宏观政策的预期，尤其要看是否涉及业绩、监管、融资、订单、利率或风险事件。\n"
-        "还缺什么信息：需要回到官网原文核对完整口径，并继续观察后续公告、管理层解释、同板块公司反应和市场是否已经提前消化。"
-    )
-    caveats = ["规则分析无法替代人工阅读原文。", "评分只表示信息重要性和风险提示，不代表股价预测。"]
+    explanation = "\n".join(split_sentences(body)[:3]) or title or "原文暂无可抽取正文。"
+    caveats = ["摘要仅来自已抓取原文，未出现在原文中的信息不会补写。"]
 
     return AnalysisResult(summary, explanation, importance, sentiment, risk, confidence, key_numbers, caveats, "rules-v1")
 
@@ -150,14 +146,14 @@ def analyze_with_openai(event: dict[str, Any], api_key: str, model: str) -> Anal
     client = OpenAI(api_key=api_key)
     prompt = {
         "task": (
-            "请基于给定财经事件做中文摘要和新手友好的量化分析。必须只依据输入事实，不得给买卖建议。"
-            "摘要要比标题更具体，说明发生了什么、涉及谁、核心数字或政策口径是什么。"
+            "请基于给定财经事件做中文事实摘要。必须只依据输入事实，不得补充背景、猜测影响、编造数字或给买卖建议。"
+            "如果原文没有说明某个信息，就写“原文未说明”。"
         ),
         "style_requirements": {
-            "summary": "120-260字，使用中文自然段，尽量包含主体、事件、数字、影响范围和不确定性。",
-            "novice_explanation": "用三段输出，分别以“发生了什么：”“为什么重要：”“还缺什么信息：”开头。",
+            "summary": "120-260字，使用中文自然段，只写原文已经出现的主体、事件、数字或政策口径。",
+            "novice_explanation": "用简洁中文解释原文在说什么；不要分析股价、风险、机会或影响。",
             "key_numbers": "数组，每项格式为“数字｜它在原文里的含义或上下文”，不要只给裸数字。",
-            "caveats": "列出需要核对的原文口径、一次性因素、滞后数据或不确定性。",
+            "caveats": "只列出原文缺失或需要回原文核对的事实口径，不写投资风险提示。",
         },
         "required_json_fields": [
             "summary",

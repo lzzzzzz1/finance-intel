@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  AlertTriangle,
   BarChart3,
-  CheckCircle2,
   FileText,
   ExternalLink,
   LayoutDashboard,
@@ -50,33 +48,6 @@ const demoEvents = [
     disclaimer: "本工具仅用于信息整理与学习，不构成投资建议。",
   },
 ];
-
-function scoreClass(value, neutral = false) {
-  if (neutral) return value >= 0 ? "score positive" : "score negative";
-  if (value >= 75) return "score high";
-  if (value >= 45) return "score mid";
-  return "score low";
-}
-
-function sentimentLabel(score = 0) {
-  if (score >= 25) return "偏正面";
-  if (score <= -25) return "偏负面";
-  return "中性/待观察";
-}
-
-function riskLabel(score = 0) {
-  if (score >= 70) return "高风险";
-  if (score >= 40) return "中等风险";
-  return "低到中等风险";
-}
-
-function impactLabel(event) {
-  const themes = (event?.themes || []).slice(0, 2).join("、");
-  const tickers = (event?.tickers || []).slice(0, 2).join("、");
-  if (tickers) return `优先关注 ${tickers} 的后续公告和价格反应。`;
-  if (themes) return `可能影响 ${themes} 相关板块的短期预期。`;
-  return "主要用于判断宏观、政策或公司基本面的边际变化。";
-}
 
 function splitReadableText(text) {
   return String(text || "")
@@ -212,10 +183,6 @@ function App() {
             );
           })}
         </nav>
-        <div className="notice">
-          <AlertTriangle size={16} />
-          <span>仅供学习和信息整理，不构成投资建议。</span>
-        </div>
       </aside>
 
       <main className="main">
@@ -258,13 +225,11 @@ function App() {
 }
 
 function Dashboard({ events, selected, onSelect }) {
-  const highRiskCount = events.filter((event) => (event.risk_score || 0) >= 70).length;
   return (
     <section className="dashboard-grid">
       <div className="brief-strip">
-        <strong>{events.length} 条重点</strong>
-        <span>{highRiskCount} 条高风险</span>
-        <span>按重要性排序</span>
+        <strong>{events.length} 篇文章</strong>
+        <span>只显示来源、标题、类别</span>
       </div>
       <div className="event-list">
         {events.map((event) => (
@@ -277,7 +242,6 @@ function Dashboard({ events, selected, onSelect }) {
 }
 
 function EventCard({ event, active, onClick }) {
-  const themes = (event.themes || []).slice(0, 2);
   return (
     <button type="button" className={`event-card ${active ? "selected" : ""}`} onClick={onClick} aria-pressed={Boolean(active)}>
       <div className="event-head">
@@ -285,17 +249,6 @@ function EventCard({ event, active, onClick }) {
         <span>{event.category}</span>
       </div>
       <strong>{event.title}</strong>
-      <div className="chips">
-        {themes.map((theme) => (
-          <span key={theme}>{theme}</span>
-        ))}
-        {!themes.length && <span>{event.region}</span>}
-      </div>
-      <div className="score-row">
-        <span className={scoreClass(event.importance_score)}>重要 {event.importance_score}</span>
-        <span className={scoreClass(event.sentiment_score, true)}>情绪 {event.sentiment_score}</span>
-        <span className={scoreClass(event.risk_score)}>风险 {event.risk_score}</span>
-      </div>
     </button>
   );
 }
@@ -311,7 +264,7 @@ function EventDetail({ event }) {
   return (
     <article className="detail">
       <div className="detail-top">
-        <span className="trust"><CheckCircle2 size={16} />AI可信度 {event.confidence_score}</span>
+        <span>{event.source_name}</span>
         <a href={event.source_url} target="_blank" rel="noreferrer">
           官网原文 <ExternalLink size={15} />
         </a>
@@ -322,23 +275,9 @@ function EventDetail({ event }) {
       <section className="ai-read">
         <div className="ai-read-title">
           <FileText size={18} />
-          <h3>AI速读</h3>
+          <h3>AI总结</h3>
         </div>
         <p className="ai-summary">{event.summary || "暂无摘要，建议点击官网原文核对完整内容。"}</p>
-        <div className="ai-grid">
-          <div>
-            <span>可能影响</span>
-            <strong>{impactLabel(event)}</strong>
-          </div>
-          <div>
-            <span>情绪判断</span>
-            <strong>{sentimentLabel(event.sentiment_score)}</strong>
-          </div>
-          <div>
-            <span>风险提示</span>
-            <strong>{riskLabel(event.risk_score)}</strong>
-          </div>
-        </div>
       </section>
 
       <div className="section-title compact-title">
@@ -364,12 +303,12 @@ function EventDetail({ event }) {
       )}
       {readingMode === "full" && readingSections.length > 0 && <p className="article-preview">{bodyPreview}</p>}
 
-      <h3>证据摘录</h3>
+      <h3>原文摘录</h3>
       <div className="evidence-list">
         {evidenceSnippets.length ? evidenceSnippets.map((item) => <blockquote key={item}>{item}</blockquote>) : <div className="empty-state">暂无可自动定位的证据片段，请打开官网原文核对。</div>}
       </div>
 
-      <h3>新手解释</h3>
+      <h3>内容说明</h3>
       <div className="explain-list">
         {explanationParts.length ? explanationParts.map((item) => <p key={item}>{item}</p>) : <p>暂无更详细解释，请优先核对官网原文。</p>}
       </div>
@@ -383,7 +322,6 @@ function EventDetail({ event }) {
           </div>
         )) : <div className="empty-state">这条内容暂时没有抽取到关键数字，重点看事件本身、监管口径和后续公告。</div>}
       </div>
-      {(event.caveats || []).length > 0 && <p className="disclaimer">{event.caveats[0]} {event.disclaimer}</p>}
     </article>
   );
 }
@@ -453,9 +391,8 @@ function Themes({ events, themes, selected, onSelect }) {
           >
             <div>
               <strong>{theme.name}</strong>
-              <span>{theme.related.length} 条 · 重要 {theme.avgImportance || "-"}</span>
+              <span>{theme.related.length} 篇文章</span>
             </div>
-            <small>最高风险 {theme.maxRisk || "-"}</small>
           </button>
         ))}
       </div>
@@ -544,8 +481,8 @@ function SettingsPanel({ sources, themes, api, reload, adminToken, setAdminToken
             <p className="hint">公开网站只读内容对外开放；刷新、设置和关注列表修改会携带这个令牌。</p>
           </>
         )}
-        <label>采集间隔（分钟）</label>
-        <input disabled={isStaticMode} type="number" min="15" max="1440" value={settings.collect_interval_minutes} onChange={(e) => setSettings({ ...settings, collect_interval_minutes: Number(e.target.value) })} />
+        <label>自动更新时间</label>
+        <input disabled value="每天 08:00（北京时间）" readOnly />
         <label>OpenAI API Key</label>
         <input disabled={isStaticMode} type="password" value={settings.openai_api_key} onChange={(e) => setSettings({ ...settings, openai_api_key: e.target.value })} placeholder="sk-..." />
         <button disabled={isStaticMode} className="primary">保存设置</button>

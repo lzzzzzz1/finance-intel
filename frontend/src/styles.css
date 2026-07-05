@@ -47,7 +47,6 @@ textarea {
 }
 
 .brand span,
-.notice,
 .topbar p,
 .meta {
   color: #9ca3af;
@@ -82,13 +81,6 @@ nav button.active,
 nav button:hover {
   color: #ffffff;
   background: #243b63;
-}
-
-.notice {
-  margin-top: auto;
-  display: flex;
-  gap: 8px;
-  line-height: 1.5;
 }
 
 .main {
@@ -256,16 +248,14 @@ h3 {
   margin: 8px 0;
 }
 
-.chips,
-.score-row {
+.chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
 }
 
-.chips span,
-.score {
+.chips span {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -277,28 +267,6 @@ h3 {
 .chips span {
   color: #475569;
   background: #eef2f7;
-}
-
-.score.high,
-.score.positive {
-  color: #065f46;
-  background: #d1fae5;
-}
-
-.score.mid {
-  color: #854d0e;
-  background: #fef3c7;
-}
-
-.score.low,
-.score.negative {
-  color: #991b1b;
-  background: #fee2e2;
-}
-
-.score.ai {
-  color: #1f2937;
-  background: #e0f2fe;
 }
 
 .detail {
@@ -344,34 +312,6 @@ h3 {
   color: #111827;
   font-weight: 650;
   line-height: 1.65;
-}
-
-.ai-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.ai-grid div {
-  min-height: 64px;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.ai-grid span {
-  display: block;
-  color: #64748b;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.ai-grid strong {
-  display: block;
-  color: #1f2937;
-  font-size: 13px;
-  line-height: 1.5;
 }
 
 .segmented {
@@ -436,20 +376,12 @@ h3 {
 }
 
 .detail a,
-.trust {
+.detail-top span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: #0f766e;
   text-decoration: none;
-}
-
-.disclaimer {
-  margin-top: 20px;
-  padding: 12px;
-  color: #7f1d1d;
-  background: #fef2f2;
-  border-radius: 8px;
 }
 
 .hint {
@@ -645,22 +577,10 @@ h3 {
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .notice {
-    display: none;
-  }
-
   .dashboard-grid,
   .themes-layout,
   .two-column {
     grid-template-columns: 1fr;
-  }
-
-  .ai-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .topbar,
