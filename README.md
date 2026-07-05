@@ -75,6 +75,15 @@ https://lzzzzzz1.github.io/finance-intel/
 - 没配置 `OPENAI_API_KEY`：系统仍会用规则分析生成基础摘要和评分。
 - 所有分析都保留原文链接，不替代你阅读官方公告，也不构成投资建议。
 
+### 开源参考方向
+
+本项目第一版保持轻量，没有直接引入大型财经框架。后续可以参考这些 GitHub 开源项目继续增强：
+
+- [OpenBB](https://github.com/OpenBB-finance/OpenBB)：适合参考“数据接入层 + 研究工作台”的信息架构。
+- [edgartools](https://github.com/dgunning/edgartools)：适合后续增强 SEC EDGAR 财报结构化解析。
+
+当前优化先采用低依赖方案：板块页改为研究工作台式布局，事件详情增加“新手解释”和“关键数字怎么读”，规则分析也会尽量提取数字上下文，避免只显示孤立数字。
+
 ### Render 部署（可选）
 
 Render 可以运行完整后端，但某些账号或地区可能要求添加银行卡。你不想绑卡时，优先使用上面的 GitHub Pages 方案。

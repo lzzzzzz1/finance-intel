@@ -80,6 +80,24 @@ function impactLabel(event) {
   return "主要用于判断宏观、政策或公司基本面的边际变化。";
 }
 
+function splitReadableText(text) {
+  return String(text || "")
+    .split(/\n+|(?<=。)/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
+function numberHint(item) {
+  const text = String(item || "");
+  const [value, context] = text.split("｜");
+  let label = "需要结合原文口径判断";
+  if (value?.includes("%")) label = "比例变化，重点看同比/环比和基数";
+  if (value?.includes("亿元") || value?.includes("亿美元")) label = "金额规模，重点看是否持续、是否一次性";
+  if (value?.includes("万股")) label = "股份数量，重点看增减持或回购目的";
+  return { value: value || text, context: context || label, label };
+}
+
 function App() {
   const [active, setActive] = useState("dashboard");
   const [events, setEvents] = useState(demoEvents);
@@ -223,7 +241,7 @@ function App() {
         {active === "dashboard" && (
           <Dashboard events={filteredEvents} sources={sources} stats={stats} selected={selected} onSelect={setSelected} />
         )}
-        {active === "themes" && <Themes events={filteredEvents} themes={themes} />}
+        {active === "themes" && <Themes events={filteredEvents} themes={themes} selected={selected} onSelect={setSelected} />}
         {active === "watchlist" && <Watchlist watchlist={watchlist} reload={loadAll} api={api} events={filteredEvents} hasAdminToken={Boolean(adminToken)} isStaticMode={isStaticMode} />}
         {active === "settings" && (
           <SettingsPanel
@@ -272,7 +290,7 @@ function Metric({ icon: Icon, label, value }) {
 
 function EventCard({ event, active, onClick }) {
   return (
-    <button className={`event-card ${active ? "selected" : ""}`} onClick={onClick}>
+    <button type="button" className={`event-card ${active ? "selected" : ""}`} onClick={onClick} aria-pressed={Boolean(active)}>
       <div className="event-head">
         <span>{event.source_name}</span>
         <span>{event.region}</span>
@@ -297,6 +315,8 @@ function EventCard({ event, active, onClick }) {
 
 function EventDetail({ event }) {
   if (!event) return null;
+  const explanationParts = splitReadableText(event.novice_explanation);
+  const keyNumbers = (event.key_numbers || []).map(numberHint);
   return (
     <article className="detail">
       <div className="detail-top">
@@ -313,7 +333,7 @@ function EventDetail({ event }) {
           <FileText size={18} />
           <h3>AI速读</h3>
         </div>
-        <p className="ai-summary">{event.summary}</p>
+        <p className="ai-summary">{event.summary || "暂无摘要，建议点击官网原文核对完整内容。"}</p>
         <div className="ai-grid">
           <div>
             <span>可能影响</span>
@@ -330,11 +350,19 @@ function EventDetail({ event }) {
         </div>
       </section>
 
-      <h3>一句话解释</h3>
-      <p>{event.novice_explanation}</p>
-      <h3>关键数字</h3>
-      <div className="chips">
-        {(event.key_numbers || []).length ? event.key_numbers.map((item) => <span key={item}>{item}</span>) : <span>暂无抽取</span>}
+      <h3>新手解释</h3>
+      <div className="explain-list">
+        {explanationParts.length ? explanationParts.map((item) => <p key={item}>{item}</p>) : <p>暂无更详细解释，请优先核对官网原文。</p>}
+      </div>
+      <h3>关键数字怎么读</h3>
+      <div className="number-grid">
+        {keyNumbers.length ? keyNumbers.map((item) => (
+          <div className="number-card" key={`${item.value}-${item.context}`}>
+            <strong>{item.value}</strong>
+            <span>{item.context}</span>
+            <small>{item.label}</small>
+          </div>
+        )) : <div className="empty-state">这条内容暂时没有抽取到关键数字，重点看事件本身、监管口径和后续公告。</div>}
       </div>
       <h3>注意事项</h3>
       <ul>
@@ -346,22 +374,85 @@ function EventDetail({ event }) {
   );
 }
 
-function Themes({ events, themes }) {
+function DetailPlaceholder({ themeName }) {
   return (
-    <section className="theme-grid">
-      {(themes.length ? themes : [{ name: "新能源", keywords: ["储能", "光伏"] }]).map((theme) => {
-        const related = events.filter((event) => (event.themes || []).includes(theme.name));
-        return (
-          <div className="theme-block" key={theme.name}>
-            <div className="section-title">
-              <h2>{theme.name}</h2>
-              <span>{related.length} 条</span>
+    <article className="detail detail-placeholder">
+      <div className="ai-read-title">
+        <FileText size={18} />
+        <h3>等待事件</h3>
+      </div>
+      <h2>{themeName || "当前板块"}暂无匹配报告</h2>
+      <p>
+        这个板块当前没有匹配到已采集事件。可以换一个板块、清空搜索词，或者点击刷新获取新的公开来源。
+      </p>
+      <p className="hint">没有来源时不会生成结论，避免把旧事件误认为当前板块内容。</p>
+    </article>
+  );
+}
+
+function Themes({ events, themes, selected, onSelect }) {
+  const themeList = useMemo(() => (
+    themes.length ? themes : [{ name: "新能源", keywords: ["储能", "光伏"] }]
+  ), [themes]);
+  const [activeTheme, setActiveTheme] = useState(themeList[0]?.name || "");
+  const themeSummaries = useMemo(() => themeList.map((theme) => {
+      const related = events.filter((event) => (event.themes || []).includes(theme.name));
+      const avgImportance = related.length
+        ? Math.round(related.reduce((sum, event) => sum + (event.importance_score || 0), 0) / related.length)
+        : 0;
+      const maxRisk = related.length ? Math.max(...related.map((event) => event.risk_score || 0)) : 0;
+      return { ...theme, related, avgImportance, maxRisk };
+    }), [events, themeList]);
+  const currentTheme = themeSummaries.find((theme) => theme.name === activeTheme) || themeSummaries[0];
+  const currentEvents = currentTheme?.related || [];
+  const detailEvent = currentEvents.find((event) => event.id === selected?.id) || currentEvents[0] || null;
+
+  useEffect(() => {
+    if (!themeSummaries.some((theme) => theme.name === activeTheme)) {
+      setActiveTheme(themeSummaries[0]?.name || "");
+    }
+  }, [activeTheme, themeSummaries]);
+
+  function selectTheme(theme) {
+    setActiveTheme(theme.name);
+    if (theme.related[0]) {
+      onSelect(theme.related[0]);
+    }
+  }
+
+  return (
+    <section className="themes-layout">
+      <div className="theme-rail">
+        {themeSummaries.map((theme) => (
+          <button
+            type="button"
+            className={`theme-pill ${activeTheme === theme.name ? "active" : ""}`}
+            key={theme.name}
+            onClick={() => selectTheme(theme)}
+          >
+            <div>
+              <strong>{theme.name}</strong>
+              <span>{theme.related.length} 条 · 重要 {theme.avgImportance || "-"}</span>
             </div>
-            <div className="chips">{(theme.keywords || []).map((keyword) => <span key={keyword}>{keyword}</span>)}</div>
-            {related.slice(0, 4).map((event) => <EventCard key={event.id} event={event} />)}
+            <small>最高风险 {theme.maxRisk || "-"}</small>
+          </button>
+        ))}
+      </div>
+      <div className="theme-block">
+        <div className="section-title">
+          <div>
+            <h2>{currentTheme?.name || "板块"}</h2>
+            <p className="hint">{(currentTheme?.keywords || []).slice(0, 8).join("、") || "暂无关键词"}</p>
           </div>
-        );
-      })}
+          <span>{currentEvents.length} 条</span>
+        </div>
+        <div className="theme-events">
+          {currentEvents.length ? currentEvents.map((event) => (
+            <EventCard key={event.id} event={event} active={detailEvent?.id === event.id} onClick={() => onSelect(event)} />
+          )) : <div className="empty-state">当前搜索条件下，这个板块暂时没有匹配事件。</div>}
+        </div>
+      </div>
+      {detailEvent ? <EventDetail event={detailEvent} /> : <DetailPlaceholder themeName={currentTheme?.name} />}
     </section>
   );
 }
