@@ -3,11 +3,9 @@ import { createRoot } from "react-dom/client";
 import {
   AlertTriangle,
   BarChart3,
-  BookOpen,
   CheckCircle2,
   FileText,
   ExternalLink,
-  Globe2,
   LayoutDashboard,
   RefreshCw,
   Search,
@@ -259,14 +257,14 @@ function App() {
   );
 }
 
-function Dashboard({ events, sources, stats, selected, onSelect }) {
+function Dashboard({ events, selected, onSelect }) {
+  const highRiskCount = events.filter((event) => (event.risk_score || 0) >= 70).length;
   return (
     <section className="dashboard-grid">
-      <div className="metrics">
-        <Metric icon={BookOpen} label="事件" value={stats.event_count || events.length} />
-        <Metric icon={Star} label="关注" value={stats.watch_count || 0} />
-        <Metric icon={Tags} label="主题" value={stats.theme_count || 0} />
-        <Metric icon={Globe2} label="来源" value={sources.length || 12} />
+      <div className="brief-strip">
+        <strong>{events.length} 条重点</strong>
+        <span>{highRiskCount} 条高风险</span>
+        <span>按重要性排序</span>
       </div>
       <div className="event-list">
         {events.map((event) => (
@@ -278,33 +276,22 @@ function Dashboard({ events, sources, stats, selected, onSelect }) {
   );
 }
 
-function Metric({ icon: Icon, label, value }) {
-  return (
-    <div className="metric">
-      <Icon size={18} />
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
 function EventCard({ event, active, onClick }) {
+  const themes = (event.themes || []).slice(0, 2);
   return (
     <button type="button" className={`event-card ${active ? "selected" : ""}`} onClick={onClick} aria-pressed={Boolean(active)}>
       <div className="event-head">
         <span>{event.source_name}</span>
-        <span>{event.region}</span>
-      </div>
-      <strong>{event.title}</strong>
-      <p>{event.summary}</p>
-      <div className="chips">
-        {(event.themes || []).slice(0, 3).map((theme) => (
-          <span key={theme}>{theme}</span>
-        ))}
         <span>{event.category}</span>
       </div>
+      <strong>{event.title}</strong>
+      <div className="chips">
+        {themes.map((theme) => (
+          <span key={theme}>{theme}</span>
+        ))}
+        {!themes.length && <span>{event.region}</span>}
+      </div>
       <div className="score-row">
-        <span className="score ai">AI总结</span>
         <span className={scoreClass(event.importance_score)}>重要 {event.importance_score}</span>
         <span className={scoreClass(event.sentiment_score, true)}>情绪 {event.sentiment_score}</span>
         <span className={scoreClass(event.risk_score)}>风险 {event.risk_score}</span>
@@ -357,7 +344,6 @@ function EventDetail({ event }) {
       <div className="section-title compact-title">
         <div>
           <h3>站内阅读</h3>
-          <p className="hint">先看提炼后的正文脉络；需要核对时再打开官网原文。</p>
         </div>
         <div className="segmented">
           <button type="button" className={readingMode === "brief" ? "active" : ""} onClick={() => setReadingMode("brief")}>精简</button>
@@ -397,12 +383,7 @@ function EventDetail({ event }) {
           </div>
         )) : <div className="empty-state">这条内容暂时没有抽取到关键数字，重点看事件本身、监管口径和后续公告。</div>}
       </div>
-      <h3>注意事项</h3>
-      <ul>
-        {(event.caveats || []).map((item) => <li key={item}>{item}</li>)}
-      </ul>
-      <p className="hint">站内先看 AI 提炼；点击“官网原文”会在新标签页打开官方来源，用于核对原始公告或新闻。</p>
-      <p className="disclaimer">{event.disclaimer}</p>
+      {(event.caveats || []).length > 0 && <p className="disclaimer">{event.caveats[0]} {event.disclaimer}</p>}
     </article>
   );
 }
