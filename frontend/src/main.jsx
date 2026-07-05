@@ -314,9 +314,13 @@ function EventCard({ event, active, onClick }) {
 }
 
 function EventDetail({ event }) {
+  const [readingMode, setReadingMode] = useState("brief");
   if (!event) return null;
   const explanationParts = splitReadableText(event.novice_explanation);
   const keyNumbers = (event.key_numbers || []).map(numberHint);
+  const readingSections = event.reading_sections || [];
+  const evidenceSnippets = event.evidence_snippets || [];
+  const bodyPreview = String(event.body || "").slice(0, readingMode === "full" ? 3600 : 900);
   return (
     <article className="detail">
       <div className="detail-top">
@@ -349,6 +353,35 @@ function EventDetail({ event }) {
           </div>
         </div>
       </section>
+
+      <div className="section-title compact-title">
+        <div>
+          <h3>站内阅读</h3>
+          <p className="hint">先看提炼后的正文脉络；需要核对时再打开官网原文。</p>
+        </div>
+        <div className="segmented">
+          <button type="button" className={readingMode === "brief" ? "active" : ""} onClick={() => setReadingMode("brief")}>精简</button>
+          <button type="button" className={readingMode === "full" ? "active" : ""} onClick={() => setReadingMode("full")}>完整</button>
+        </div>
+      </div>
+      {readingSections.length ? (
+        <div className="reading-sections">
+          {readingSections.map((section) => (
+            <section key={`${section.title}-${section.content}`}>
+              <strong>{section.title}</strong>
+              <p>{section.content}</p>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p className="article-preview">{bodyPreview || "暂无可展示正文，请打开官网原文核对。"}</p>
+      )}
+      {readingMode === "full" && readingSections.length > 0 && <p className="article-preview">{bodyPreview}</p>}
+
+      <h3>证据摘录</h3>
+      <div className="evidence-list">
+        {evidenceSnippets.length ? evidenceSnippets.map((item) => <blockquote key={item}>{item}</blockquote>) : <div className="empty-state">暂无可自动定位的证据片段，请打开官网原文核对。</div>}
+      </div>
 
       <h3>新手解释</h3>
       <div className="explain-list">

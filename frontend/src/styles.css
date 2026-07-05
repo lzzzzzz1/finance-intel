@@ -236,6 +236,11 @@ h3 {
   gap: 10px;
 }
 
+.compact-title {
+  align-items: flex-start;
+  margin: 18px 0 10px;
+}
+
 .event-head {
   color: #64748b;
   font-size: 12px;
@@ -369,6 +374,67 @@ h3 {
   color: #1f2937;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  background: #eef2f7;
+  border-radius: 8px;
+}
+
+.segmented button {
+  min-width: 52px;
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  color: #475569;
+  background: transparent;
+  cursor: pointer;
+}
+
+.segmented button.active {
+  color: #0f766e;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+}
+
+.reading-sections {
+  display: grid;
+  gap: 10px;
+}
+
+.reading-sections section,
+.article-preview,
+.evidence-list blockquote {
+  margin: 0;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.reading-sections strong {
+  display: block;
+  color: #0f766e;
+  margin-bottom: 6px;
+}
+
+.reading-sections p,
+.article-preview {
+  color: #334155;
+  line-height: 1.75;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 8px;
+}
+
+.evidence-list blockquote {
+  border-left: 3px solid #0f766e;
+  color: #334155;
+  line-height: 1.7;
 }
 
 .detail a,

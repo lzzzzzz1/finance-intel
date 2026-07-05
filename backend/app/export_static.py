@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .collector import collect_all
 from .config import get_settings
+from .api import enrich_events
 from .storage import connect, init_db, rows_to_dicts
 
 
@@ -24,6 +25,7 @@ def build_dashboard(conn) -> dict:
             """
         ).fetchall()
     )
+    events = enrich_events(events)
     sources = rows_to_dicts(conn.execute("SELECT * FROM sources ORDER BY region, category, name").fetchall())
     themes = rows_to_dicts(conn.execute("SELECT * FROM themes ORDER BY name").fetchall())
     watchlist = rows_to_dicts(conn.execute("SELECT * FROM watchlist ORDER BY created_at DESC").fetchall())

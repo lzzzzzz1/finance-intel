@@ -6,11 +6,11 @@ from pathlib import Path
 
 from fastapi import HTTPException
 
-from app.analyzer import DISCLAIMER, rule_based_analysis
+from app.analyzer import DISCLAIMER, build_reading_sections, rule_based_analysis
 from app.api import require_admin
 from app.collector import event_payload, save_event_with_analysis
 from app.config import Settings
-from app.extract import clean_html, extract_tickers, match_themes
+from app.extract import clean_html, extract_tickers, match_themes, readable_html_text
 from app.storage import connect, init_db
 
 
@@ -24,6 +24,19 @@ class CoreTests(unittest.TestCase):
     def test_theme_matching(self):
         themes = [{"name": "新能源", "keywords": ["储能", "光伏"]}]
         self.assertEqual(match_themes("公司储能业务增长", themes), ["新能源"])
+
+    def test_readable_html_text_prefers_article_blocks(self):
+        raw = """
+        <html><body><nav>首页 登录 注册</nav>
+        <article><h1>公司公告</h1><p>公司发布年度报告，营业收入增长 12.5%，净利润保持稳定。</p>
+        <p>管理层提示海外需求存在不确定性，后续需要观察订单和现金流。</p></article>
+        <footer>版权所有 联系我们</footer></body></html>
+        """
+        text = readable_html_text(raw)
+        self.assertIn("年度报告", text)
+        self.assertIn("现金流", text)
+        self.assertNotIn("版权所有", text)
+        self.assertTrue(build_reading_sections(text))
 
     def test_rule_analysis_contains_required_fields(self):
         result = rule_based_analysis({"title": "年报业绩增长", "body": "净利润增长 20%，但提示监管风险。", "trust_level": "official"})

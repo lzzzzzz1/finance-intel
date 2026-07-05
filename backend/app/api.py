@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from .analyzer import build_reading_sections, extract_evidence_snippets
 from .collector import collect_all
 from .config import Settings, get_settings
 from .storage import connect, init_db, row_to_dict, rows_to_dicts
@@ -68,6 +69,7 @@ def dashboard(conn=Depends(get_conn)) -> dict[str, Any]:
             """
         ).fetchall()
     )
+    events = enrich_events(events)
     sources = rows_to_dicts(conn.execute("SELECT * FROM sources ORDER BY region, category, name").fetchall())
     return {
         "events": events,
@@ -95,7 +97,7 @@ def event_detail(event_id: int, conn=Depends(get_conn)) -> dict[str, Any]:
     event = row_to_dict(row)
     if not event:
         raise HTTPException(status_code=404, detail="event not found")
-    return event
+    return enrich_event(event)
 
 
 @router.get("/themes")
@@ -173,3 +175,16 @@ def refresh(
     _: None = Depends(require_admin),
 ) -> dict[str, int]:
     return collect_all(conn, settings)
+
+
+def enrich_event(event: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not event:
+        return event
+    body = event.get("body", "")
+    event["reading_sections"] = build_reading_sections(body)
+    event["evidence_snippets"] = extract_evidence_snippets(body, event.get("title", ""), event.get("key_numbers", []))
+    return event
+
+
+def enrich_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [enrich_event(event) for event in events]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from typing import Any
 
@@ -10,7 +11,7 @@ except ImportError:  # pragma: no cover - optional until dependencies install
     httpx = None
 
 from .analyzer import analyze_with_openai
-from .extract import clean_html, extract_tickers, match_themes, raw_hash, utc_now_iso
+from .extract import clean_html, extract_tickers, match_themes, raw_hash, readable_html_text, utc_now_iso
 
 
 def source_rows(conn: sqlite3.Connection) -> list[dict[str, Any]]:
@@ -65,10 +66,25 @@ def fetch_source(source: dict[str, Any], user_agent: str) -> list[dict[str, Any]
 
 
 def parse_html_source(source: dict[str, Any], html: str) -> list[dict[str, Any]]:
-    text = clean_html(html)
-    title = f"{source['name']}最新公开信息"
+    text = readable_html_text(html)
+    title = extract_html_title(html) or f"{source['name']}最新公开信息"
     body = text[:6000] or "该来源暂无可抽取正文，请打开原文查看。"
     return [event_payload(source, title, body, source["url"])]
+
+
+def extract_html_title(raw_html: str) -> str:
+    title_match = re_search(r"(?is)<title[^>]*>(.*?)</title>", raw_html)
+    if title_match:
+        return clean_html(title_match)[:120]
+    h1_match = re_search(r"(?is)<h1[^>]*>(.*?)</h1>", raw_html)
+    if h1_match:
+        return clean_html(h1_match)[:120]
+    return ""
+
+
+def re_search(pattern: str, text: str) -> str:
+    match = re.search(pattern, text or "")
+    return match.group(1) if match else ""
 
 
 def parse_json_source(source: dict[str, Any], payload: str) -> list[dict[str, Any]]:
