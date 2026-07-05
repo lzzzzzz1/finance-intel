@@ -408,15 +408,22 @@ function Themes({ events, themes, selected, onSelect }) {
   const themeList = useMemo(() => (
     themes.length ? themes : [{ name: "新能源", keywords: ["储能", "光伏"] }]
   ), [themes]);
-  const [activeTheme, setActiveTheme] = useState(themeList[0]?.name || "");
-  const themeSummaries = useMemo(() => themeList.map((theme) => {
-      const related = events.filter((event) => (event.themes || []).includes(theme.name));
+  const [activeTheme, setActiveTheme] = useState("全部");
+  const themeSummaries = useMemo(() => {
+    const baseThemes = [
+      { name: "全部", keywords: ["所有已采集事件"], relatedOverride: events },
+      { name: "未分类", keywords: ["暂未命中行业关键词"], relatedOverride: events.filter((event) => !(event.themes || []).length) },
+      ...themeList,
+    ];
+    return baseThemes.map((theme) => {
+      const related = theme.relatedOverride || events.filter((event) => (event.themes || []).includes(theme.name));
       const avgImportance = related.length
         ? Math.round(related.reduce((sum, event) => sum + (event.importance_score || 0), 0) / related.length)
         : 0;
       const maxRisk = related.length ? Math.max(...related.map((event) => event.risk_score || 0)) : 0;
       return { ...theme, related, avgImportance, maxRisk };
-    }), [events, themeList]);
+    });
+  }, [events, themeList]);
   const currentTheme = themeSummaries.find((theme) => theme.name === activeTheme) || themeSummaries[0];
   const currentEvents = currentTheme?.related || [];
   const detailEvent = currentEvents.find((event) => event.id === selected?.id) || currentEvents[0] || null;

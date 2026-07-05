@@ -135,13 +135,23 @@ def extract_tickers(text: str) -> list[str]:
 
 
 def match_themes(text: str, themes: list[dict]) -> list[str]:
-    haystack = (text or "").lower()
+    haystack = text or ""
+    haystack_lower = haystack.lower()
     matched: list[str] = []
     for theme in themes:
         keywords = theme.get("keywords", [])
-        if any(str(keyword).lower() in haystack for keyword in keywords):
+        if any(keyword_matches(haystack, haystack_lower, str(keyword)) for keyword in keywords):
             matched.append(theme["name"])
     return matched
+
+
+def keyword_matches(text: str, text_lower: str, keyword: str) -> bool:
+    keyword = keyword.strip()
+    if not keyword:
+        return False
+    if keyword.isascii() and len(keyword) <= 3:
+        return re.search(rf"(?<![A-Za-z0-9]){re.escape(keyword)}(?![A-Za-z0-9])", text, re.IGNORECASE) is not None
+    return keyword.lower() in text_lower
 
 
 def utc_now_iso() -> str:

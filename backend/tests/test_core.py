@@ -25,6 +25,11 @@ class CoreTests(unittest.TestCase):
         themes = [{"name": "新能源", "keywords": ["储能", "光伏"]}]
         self.assertEqual(match_themes("公司储能业务增长", themes), ["新能源"])
 
+    def test_short_english_theme_keyword_requires_word_boundary(self):
+        themes = [{"name": "AI", "keywords": ["AI"]}]
+        self.assertEqual(match_themes("Federal Reserve maintains policy stance", themes), [])
+        self.assertEqual(match_themes("公司发布 AI 算力业务进展", themes), ["AI"])
+
     def test_readable_html_text_prefers_article_blocks(self):
         raw = """
         <html><body><nav>首页 登录 注册</nav>
